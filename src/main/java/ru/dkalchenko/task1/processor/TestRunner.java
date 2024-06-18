@@ -16,6 +16,8 @@ import static java.lang.reflect.Modifier.isStatic;
 
 public class TestRunner {
 
+    private static Object instance;
+
     public static void runTests(Class<?> clazz) {
         Method[] declaredMethods = clazz.getDeclaredMethods();
         validateAnnotationUsage(declaredMethods);
@@ -48,27 +50,27 @@ public class TestRunner {
         }
         testMethods.sort(Comparator.comparingInt(method -> method.getDeclaredAnnotation(Test.class).priority()));
 
-        beforeSuiteMethod.ifPresent(method -> invokeMethodOnNewInstance(clazz, method));
+        beforeSuiteMethod.ifPresent(method -> invokeMethod(clazz, method));
         if (beforeTestMethod.isEmpty() && afterTestMethod.isEmpty()) {
-            testMethods.forEach(method -> invokeMethodOnNewInstance(clazz, method));
+            testMethods.forEach(method -> invokeMethod(clazz, method));
         } else if (beforeTestMethod.isPresent() && afterTestMethod.isPresent()) {
             for (Method method : testMethods) {
-                invokeMethodOnNewInstance(clazz, beforeTestMethod.get());
-                invokeMethodOnNewInstance(clazz, method);
-                invokeMethodOnNewInstance(clazz, afterTestMethod.get());
+                invokeMethod(clazz, beforeTestMethod.get());
+                invokeMethod(clazz, method);
+                invokeMethod(clazz, afterTestMethod.get());
             }
         } else if (beforeTestMethod.isPresent()) {
             for (Method method : testMethods) {
-                invokeMethodOnNewInstance(clazz, beforeTestMethod.get());
-                invokeMethodOnNewInstance(clazz, method);
+                invokeMethod(clazz, beforeTestMethod.get());
+                invokeMethod(clazz, method);
             }
         } else {
             for (Method method : testMethods) {
-                invokeMethodOnNewInstance(clazz, method);
-                invokeMethodOnNewInstance(clazz, afterTestMethod.get());
+                invokeMethod(clazz, method);
+                invokeMethod(clazz, afterTestMethod.get());
             }
         }
-        afterSuiteMethod.ifPresent(method -> invokeMethodOnNewInstance(clazz, method));
+        afterSuiteMethod.ifPresent(method -> invokeMethod(clazz, method));
 
         for (Method method : csvSourceMethods) {
             String value = method.getDeclaredAnnotation(CsvSource.class).value();
@@ -151,9 +153,12 @@ public class TestRunner {
         }
     }
 
-    private static void invokeMethodOnNewInstance(Class<?> clazz, Method method) {
+    private static void invokeMethod(Class<?> clazz, Method method) {
         try {
-            method.invoke(clazz.getDeclaredConstructor().newInstance());
+            if (instance == null) {
+                instance = clazz.getDeclaredConstructor().newInstance();
+            }
+            method.invoke(instance);
         } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException
                  | InstantiationException e) {
             throw new RuntimeException(e);
