@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static java.util.Map.entry;
@@ -44,7 +43,6 @@ public class TaskExecutionTest {
         int result = integers.stream()
                 .sorted(Comparator.reverseOrder())
                 .skip(2)
-                .limit(1)
                 .findFirst()
                 .orElseThrow();
         // check
@@ -138,9 +136,7 @@ public class TaskExecutionTest {
         List<String> strings = new ArrayList<>(List.of("Каледарь", "Красота", "Реструктуризация", "Оброк"));
         // decision
         String result = strings.stream()
-                .sorted(Comparator.comparingInt(String::length).reversed())
-                .limit(1)
-                .findFirst()
+                .max(Comparator.comparingInt(String::length))
                 .orElseThrow();
         // check
         assertThat(result).isEqualTo("Реструктуризация");
@@ -231,44 +227,13 @@ public class TaskExecutionTest {
                 "Высокие зарплаты вполне реальная история",
                 "Так что приходите в IT"};
         // decision
-        String resultOne = firstVariant(stringArray);
-        String resultTwo = secondVariant(stringArray);
-        // check
-        assertThat(resultOne).isIn("Периодически", "программного");
-        assertThat(resultTwo).isIn("Периодически", "программного");
-    }
-
-    /**
-     * Простой вариант решения: без предварительного нахождения списка самых длинных слов
-     * и последующей выборки любого из них, а сразу самое длинное первое попавшееся слово методом max().
-     */
-    private static String firstVariant(String[] stringArray) {
-        return Arrays.stream(stringArray)
+        String result = Arrays.stream(stringArray)
                 .map(words -> words.split(" "))
                 .flatMap(Arrays::stream)
                 .max(Comparator.comparing(String::length))
                 .orElseThrow();
-    }
-
-    /**
-     * Усложненный вариант решения: с предварительным нахождением списка самых длинных слов
-     * и последующей выборки методом findAny() любого из них.
-     */
-    private static String secondVariant(String[] stringArray) {
-        AtomicInteger maxLength = new AtomicInteger();
-        return Arrays.stream(stringArray)
-                .map(words -> words.split(" "))
-                .flatMap(Arrays::stream)
-                .peek(word -> {
-                    if (maxLength.get() < word.length()) {
-                        maxLength.set(word.length());
-                    }
-                })
-                .toList()
-                .stream()
-                .filter(word -> word.length() == maxLength.get())
-                .findAny()
-                .orElseThrow();
+        // check
+        assertThat(result).isIn("Периодически", "программного");
     }
 
 }
