@@ -54,7 +54,6 @@ public class Application {
         final int delimiter = 1_000;
         System.out.println("Работа в пуле потоков заняла: " + (end - start) / delimiter + " сек.");
         threadPool.shutdown();
-        threadPool.awaitTermination();
     }
 
 }
