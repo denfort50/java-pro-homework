@@ -1,5 +1,6 @@
 package ru.dkalchenko.task2;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -96,7 +97,7 @@ public class TaskExecutionTest {
                 .limit(numbersLimit)
                 .toList();
         // check
-        assertThat(result).containsExactly(sergey, svetlana, elena);
+        Assertions.assertThat(result).containsExactly(sergey, svetlana, elena);
     }
 
     /**
